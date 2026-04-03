@@ -20,28 +20,23 @@ pip install torch   # pytorch.org for GPU version
 
 ## 🚀 Quick Start
 
-### 1. Synthetic Data (no API, instant)
+### 1. Real Market Data (yfinance)
 ```bash
-python train_pipeline.py --mode synthetic
+python train_pipeline.py 
 ```
 
-### 2. Real Market Data (yfinance)
-```bash
-python train_pipeline.py --mode real
-```
-
-### 3. Save trained models
+### 2. Save trained models
 ```bash
 python train_pipeline.py --mode real --save
 ```
 
-### 4. Generate Dashboard Data
+### 3. Generate Dashboard Data
 Generate the latest prediction JSON for the dashboard:
 ```bash
 python export_dashboard_data.py
 ```
 
-### 5. Launch the Dashboard
+### 4. Launch the Dashboard
 Run the Flask server to view the dynamic dashboard:
 ```bash
 python app.py
