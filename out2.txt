@@ -1,2 +1,0 @@
-States 2 F1 0.8824
-States 3 F1 0.8824
