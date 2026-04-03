@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIFTY Banking Risk Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ══════════════════════════════════════════
+     DESIGN SYSTEM — dark financial terminal
+  ══════════════════════════════════════════ */
+  :root {
+    --bg:          #080c12;
+    --bg2:         #0d1420;
+    --bg3:         #111927;
+    --panel:       #131d2e;
+    --border:      #1e2d42;
+    --border2:     #243449;
+    --text:        #d4e4f7;
+    --text-dim:    #6b88a8;
+    --text-muted:  #3d5a7a;
+    --accent:      #00d4ff;
+    --accent2:     #0099cc;
+    --green:       #00e676;
+    --yellow:      #ffc107;
+    --orange:      #ff7043;
+    --red:         #f44336;
+    --purple:      #ce93d8;
+    --stable:      #00e676;
+    --lowrisk:     #69f0ae;
+    --stress:      #ffc107;
+    --crisis:      #f44336;
+    --recovery:    #29b6f6;
+    --font-mono:   'Space Mono', monospace;
+    --font-main:   'Syne', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ══════════════════════════════════════════
+     HEADER
+  ══════════════════════════════════════════ */
+  header {
+    background: linear-gradient(90deg, var(--bg2) 0%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), #0066ff);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-size: 15px; font-weight: 800; letter-spacing: 0.05em; }
+  .logo-sub  { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); letter-spacing: 0.12em; }
+
+  .header-right { display: flex; align-items: center; gap: 20px; }
+
+  .live-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,230,118,0.08);
+    border: 1px solid rgba(0,230,118,0.25);
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 11px; font-family: var(--font-mono); color: var(--green);
+    letter-spacing: 0.08em;
+  }
+  .pulse {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%    { opacity:0.4; transform:scale(0.8); }
+  }
+
+  .clock { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+
+  /* ══════════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════════ */
+  .main {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto;
+    gap: 0;
+    min-height: calc(100vh - 65px);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    height: calc(100vh - 65px);
+    position: sticky; top: 65px;
+  }
+
+  /* ── Content ── */
+  .content {
+    padding: 24px;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+
+  /* ══════════════════════════════════════════
+     PANELS
+  ══════════════════════════════════════════ */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .panel:hover { border-color: var(--border2); }
+  .panel-title {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::before {
+    content:''; display:inline-block;
+    width:3px; height:12px; border-radius:2px;
+    background: var(--accent);
+  }
+
+  /* ══════════════════════════════════════════
+     RISK SCORE — BIG GAUGE
+  ══════════════════════════════════════════ */
+  .gauge-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 4px;
+  }
+  .gauge-svg-wrap { position: relative; width: 180px; height: 100px; }
+  .gauge-svg { width:180px; height:100px; }
+  .gauge-value {
+    position: absolute;
+    bottom: 2px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -1px;
+  }
+
+  .state-badge {
+    margin-top: 10px;
+    padding: 5px 18px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+    border: 2px solid;
+  }
+
+  .velocity-row {
+    display: flex; gap: 12px; margin-top: 12px; width: 100%;
+  }
+  .vel-box {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .vel-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .vel-val   { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin-top: 2px; }
+
+  /* ══════════════════════════════════════════
+     STOCK SELECTOR
+  ══════════════════════════════════════════ */
+  .stock-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stock-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stock-btn::before {
+    content:''; position:absolute; inset:0;
+    opacity: 0; transition: opacity 0.2s;
+    background: linear-gradient(135deg, rgba(0,212,255,0.08), transparent);
+  }
+  .stock-btn:hover::before { opacity: 1; }
+  .stock-btn:hover { border-color: var(--accent2); transform: translateY(-1px); }
+  .stock-btn.active {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.06);
+    box-shadow: 0 0 0 1px var(--accent) inset;
+  }
+
+  .stock-name  { font-size: 12px; font-weight: 700; }
+  .stock-score-pill {
+    display: inline-block; margin-top: 4px;
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-family: var(--font-mono); font-weight: 700;
+  }
+  .stock-rec {
+    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 2px; font-weight: 700;
+  }
+
+  /* ══════════════════════════════════════════
+     NEXT STATE PROBABILITIES
+  ══════════════════════════════════════════ */
+  .prob-bars { display: flex; flex-direction: column; gap: 6px; }
+  .prob-row  { display: flex; align-items: center; gap: 8px; }
+  .prob-label{ font-size: 10px; width: 70px; color: var(--text-dim); font-family: var(--font-mono); }
+  .prob-track{
+    flex:1; height:6px; background: var(--bg3);
+    border-radius:3px; overflow:hidden;
+  }
+  .prob-fill { height:100%; border-radius:3px; transition: width 0.6s ease; }
+  .prob-pct  { font-size: 10px; font-family: var(--font-mono); width: 36px; text-align:right; color: var(--text-dim); }
+
+  /* ══════════════════════════════════════════
+     MAIN CONTENT — TOP ROW
+  ══════════════════════════════════════════ */
+  .top-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::after {
+    content:''; position:absolute;
+    top:0; right:0;
+    width:60px; height:60px;
+    background: radial-gradient(circle at top right, rgba(0,212,255,0.07), transparent 70%);
+  }
+  .kpi-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.14em; text-transform: uppercase; }
+  .kpi-value { font-family: var(--font-mono); font-size: 26px; font-weight: 700; margin: 6px 0 4px; }
+  .kpi-delta { font-size: 11px; font-family: var(--font-mono); }
+  .kpi-delta.up   { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+  .kpi-delta.flat { color: var(--text-dim); }
+
+  /* ══════════════════════════════════════════
+     CHARTS
+  ══════════════════════════════════════════ */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-container {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-container canvas { max-height: 200px; }
+
+  /* ══════════════════════════════════════════
+     STOCK DETAIL PANEL
+  ══════════════════════════════════════════ */
+  .detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .stock-detail-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .stock-detail-panel.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(6px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .recommendation-box {
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.1em;
+    border: 2px solid;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .metric-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .metric-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .metric-value { font-family: var(--font-mono); font-size: 15px; font-weight: 700; margin-top: 3px; }
+
+  .reasons-list { list-style: none; }
+  .reasons-list li {
+    padding: 5px 0 5px 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    position: relative;
+    border-bottom: 1px solid var(--bg3);
+  }
+  .reasons-list li::before {
+    content: '›'; position:absolute; left:0;
+    color: var(--accent);
+  }
+
+  /* ══════════════════════════════════════════
+     RANKING TABLE
+  ══════════════════════════════════════════ */
+  .ranking-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 12px;
+  }
+  .ranking-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--text-dim);
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .ranking-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--bg3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .ranking-table tr:hover td { background: rgba(0,212,255,0.03); }
+
+  .rec-tag {
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+  }
+  .rec-BUY  { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+  .rec-HOLD { background: rgba(255,193,7,0.10);  color: var(--yellow); border: 1px solid rgba(255,193,7,0.3); }
+  .rec-AVOID{ background: rgba(244,67,54,0.10);  color: var(--red); border: 1px solid rgba(244,67,54,0.3); }
+
+  /* ══════════════════════════════════════════
+     MODEL COMPARISON SECTION
+  ══════════════════════════════════════════ */
+  .model-table {
+    width:100%; border-collapse:collapse; font-size:12px;
+  }
+  .model-table th {
+    padding: 8px 12px;
+    background: var(--bg3);
+    font-size:9px; letter-spacing:0.12em; text-transform:uppercase;
+    color: var(--text-dim); text-align:right;
+    border-bottom: 1px solid var(--border);
+  }
+  .model-table th:first-child { text-align:left; }
+  .model-table td {
+    padding: 9px 12px;
+    font-family: var(--font-mono);
+    text-align: right;
+    border-bottom: 1px solid var(--bg3);
+    font-size:12px;
+  }
+  .model-table td:first-child { text-align:left; font-family: var(--font-main); font-weight:600; }
+  .model-table tr.best-row td { background: rgba(0,230,118,0.04); }
+  .model-table tr:hover td    { background: rgba(255,255,255,0.02); }
+
+  .cell-good { color: var(--green); }
+  .cell-warn { color: var(--yellow); }
+  .cell-bad  { color: var(--red); }
+
+  /* ══════════════════════════════════════════
+     FOOTER NAV
+  ══════════════════════════════════════════ */
+  .section-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 10px 20px;
+    font-family: var(--font-main); font-size: 12px; font-weight: 600;
+    color: var(--text-dim); letter-spacing: 0.06em;
+    border-bottom: 2px solid transparent;
+    transition: all 0.18s;
+  }
+  .tab-btn:hover  { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ══════════════════════════════════════════
+     FEATURE BAR CHART
+  ══════════════════════════════════════════ */
+  .feat-bars { display:flex; flex-direction:column; gap:8px; }
+  .feat-row  { display:flex; align-items:center; gap:10px; }
+  .feat-name { font-size:10px; color:var(--text-dim); font-family:var(--font-mono); width:130px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .feat-track{ flex:1; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+  .feat-fill { height:100%; border-radius:4px; background: linear-gradient(90deg,var(--accent2),var(--accent)); }
+  .feat-pct  { font-size:10px; font-family:var(--font-mono); color:var(--text-dim); width:36px; text-align:right; }
+
+  /* ══════════════════════════════════════════
+     UTILITIES
+  ══════════════════════════════════════════ */
+  .no-stock-msg {
+    text-align:center; padding:40px 20px;
+    color:var(--text-muted); font-size:13px;
+  }
+  .no-stock-msg span { font-size:28px; display:block; margin-bottom:8px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ HEADER ═══════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏦</div>
+    <div>
+      <div class="logo-text">NIFTY RISK INTELLIGENCE</div>
+      <div class="logo-sub">BANKING SECTOR RISK MONITOR</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill">
+      <div class="pulse"></div> LIVE SIMULATION
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════ LAYOUT ═══════════════════════════════ -->
+<div class="main">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar">
+
+    <!-- Risk Gauge -->
+    <div class="panel">
+      <div class="panel-title">Market Risk Score</div>
+      <div class="gauge-wrap">
+        <div class="gauge-svg-wrap">
+          <svg class="gauge-svg" viewBox="0 0 180 100" id="gaugeSvg">
+            <!-- Track -->
+            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#1e2d42" stroke-width="14" stroke-linecap="round"/>
+            <!-- Fill -->
+            <path id="gaugeFill" d="M20,90 A70,70 0 0,1 160,90" fill="none"
+                  stroke="#00d4ff" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="220" stroke-dashoffset="220"/>
+            <!-- Needle dot -->
+            <circle id="gaugeNeedle" cx="90" cy="90" r="5" fill="#00d4ff"/>
+          </svg>
+          <div class="gauge-value" id="gaugeVal" style="color:#00d4ff">—</div>
+        </div>
+        <div class="state-badge" id="stateBadge">Loading...</div>
+      </div>
+      <div class="velocity-row">
+        <div class="vel-box">
+          <div class="vel-label">Velocity</div>
+          <div class="vel-val" id="velVal">—</div>
+        </div>
+        <div class="vel-box">
+          <div class="vel-label">Momentum</div>
+          <div class="vel-val" id="momVal">—</div>
+        </div>
+        <div class="vel-box">
+          <div class="vel-label">Trend</div>
+          <div class="vel-val" id="trendVal">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next State Probs -->
+    <div class="panel">
+      <div class="panel-title">Next State Probability</div>
+      <div class="prob-bars" id="probBars"></div>
+    </div>
+
+    <!-- Bank Stocks -->
+    <div class="panel">
+      <div class="panel-title">Select Bank Stock</div>
+      <div class="stock-grid" id="stockGrid"></div>
+    </div>
+
+  </aside>
+
+  <!-- ════════ CONTENT ════════ -->
+  <main class="content">
+
+    <!-- KPI Row -->
+    <div class="top-row">
+      <div class="kpi-card">
+        <div class="kpi-label">VIX (Fear Index)</div>
+        <div class="kpi-value" id="kpiVix">—</div>
+        <div class="kpi-delta" id="kpiVixD">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">USD / INR</div>
+        <div class="kpi-value" id="kpiFx">—</div>
+        <div class="kpi-delta" id="kpiFxD">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Crisis Probability (3d)</div>
+        <div class="kpi-value" id="kpiCrisis">—</div>
+        <div class="kpi-delta" id="kpiCrisisD" class="flat">LSTM Model</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Recovery Chance</div>
+        <div class="kpi-value" id="kpiRecovery">—</div>
+        <div class="kpi-delta flat" id="kpiRecoveryD">from current state</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="section-tabs">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" onclick="switchTab('stocks')">Stock Analysis</button>
+      <button class="tab-btn" onclick="switchTab('models')">Model Comparison</button>
+      <button class="tab-btn" onclick="switchTab('features')">Feature Importance</button>
+    </div>
+
+    <!-- ── TAB: DASHBOARD ── -->
+    <div class="tab-panel active" id="tab-dashboard">
+
+      <!-- Charts Row -->
+      <div class="chart-row">
+        <div class="chart-container">
+          <div class="panel-title" style="margin-bottom:12px;">Risk Score Timeline</div>
+          <canvas id="riskChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="panel-title" style="margin-bottom:12px;">Component Breakdown</div>
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Stock Detail + Worst Stocks -->
+      <div class="detail-row">
+        <!-- Selected Stock Detail -->
+        <div>
+          <div class="section-label">Selected Stock Analysis</div>
+          <div class="no-stock-msg" id="noStockMsg">
+            <span>🏦</span>Click a bank in the sidebar to analyse it
+          </div>
+          <div class="stock-detail-panel" id="stockDetailPanel">
+            <div class="recommendation-box" id="recBox">—</div>
+            <div class="metrics-grid" id="metricsGrid"></div>
+            <div class="section-label">Why this recommendation?</div>
+            <ul class="reasons-list" id="reasonsList"></ul>
+          </div>
+        </div>
+
+        <!-- Next 3-day outlook -->
+        <div>
+          <div class="section-label">3-Day Market Outlook</div>
+          <div class="panel" style="height: calc(100% - 24px);">
+            <canvas id="outlookChart" style="max-height:200px;"></canvas>
+            <div style="margin-top:14px;" id="outlookText"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: STOCK ANALYSIS ── -->
+    <div class="tab-panel" id="tab-stocks">
+      <div class="panel">
+        <div class="panel-title">All Stocks — Risk Ranking</div>
+        <table class="ranking-table" id="rankingTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Stock</th><th>Score</th><th>Rec.</th>
+              <th>Volatility</th><th>Beta</th><th>Sharpe</th>
+              <th>Momentum</th><th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB: MODEL COMPARISON ── -->
+    <div class="tab-panel" id="tab-models">
+      <div class="panel">
+        <div class="panel-title">Comparative Model Evaluation</div>
+        <table class="model-table" id="modelTable">
+          <thead>
+            <tr>
+              <th>Model</th><th>Precision</th><th>Recall</th>
+              <th>F1</th><th>ROC-AUC</th><th>Event Detect</th>
+              <th>Delay (days)</th><th>False Alarm</th><th>Stability</th>
+            </tr>
+          </thead>
+          <tbody id="modelBody"></tbody>
+        </table>
+      </div>
+      <div class="panel" style="margin-top:0;">
+        <div class="panel-title">PR Curve (simulated)</div>
+        <canvas id="prChart" style="max-height:220px;"></canvas>
+      </div>
+    </div>
+
+    <!-- ── TAB: FEATURE IMPORTANCE ── -->
+    <div class="tab-panel" id="tab-features">
+      <div class="panel">
+        <div class="panel-title">Random Forest Feature Importances</div>
+        <div class="feat-bars" id="featBars"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════ SCRIPT ═══════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DYNAMIC FLASK INTEGRATION 
+// ═══════════════════════════════════════════════════════════════════
+let STOCKS = [];
+let MODEL_RESULTS = [];
+let FEATURES = [];
+let timeline = {};
+let latestScore = 0;
+let latestState = "Stable";
+let prevScore = 0;
+let velocity = 0;
+let momentum5 = 0;
+let components = {};
+let macroData = {};
+let crisisProb = 0;
+let nextProbs = {};
+let recoverChance = 0;
+
+const STATE_COLORS = {
+  "Stable":   "#00e676",
+  "Low Risk": "#69f0ae",
+  "Stress":   "#ffc107",
+  "Crisis":   "#f44336",
+  "Recovery": "#29b6f6",
+};
+
+const TRANSITION = {
+  "Stable":   {Stable:0.90,LowRisk:0.08,Stress:0.02,Crisis:0.00,Recovery:0.00},
+  "Low Risk": {Stable:0.15,LowRisk:0.70,Stress:0.13,Crisis:0.02,Recovery:0.00},
+  "Stress":   {Stable:0.05,LowRisk:0.15,Stress:0.55,Crisis:0.20,Recovery:0.05},
+  "Crisis":   {Stable:0.00,LowRisk:0.05,Stress:0.30,Crisis:0.45,Recovery:0.20},
+  "Recovery": {Stable:0.10,LowRisk:0.35,Stress:0.35,Crisis:0.05,Recovery:0.15},
+};
+
+async function loadData() {
+    try {
+        const response = await fetch('/api/data');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        
+        STOCKS = data.STOCKS;
+        MODEL_RESULTS = data.MODEL_RESULTS;
+        FEATURES = data.FEATURES;
+        timeline = data.timeline;
+        latestScore = data.latestScore;
+        latestState = data.latestState;
+        prevScore = data.prevScore;
+        velocity = data.velocity;
+        momentum5 = data.momentum5;
+        components = data.components;
+        macroData = data.macroData;
+        
+        crisisProb = Math.round(Math.max(0, Math.min(98, 100 - latestScore*1.05)));
+        nextProbs = TRANSITION[latestState] || TRANSITION["Stress"];
+        recoverChance = Math.round(((nextProbs.Stable||0)+(nextProbs.LowRisk||0)+(nextProbs.Recovery||0))*100);
+        
+        init();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        document.getElementById('stateBadge').textContent = 'Error Loading Data';
+        document.getElementById('stateBadge').style.color = 'var(--red)';
+    }
+}
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+// Clock
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=
+    now.toLocaleTimeString('en-IN',{hour12:false});
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── Gauge ──
+function renderGauge(score, state){
+  const totalLen=220;
+  const fillLen = totalLen * (score/100);
+  const dash    = fillLen;
+  const gap     = totalLen - fillLen;
+  const color   = STATE_COLORS[state] || "#00d4ff";
+
+  const fill    = document.getElementById("gaugeFill");
+  fill.style.stroke          = color;
+  fill.setAttribute("stroke-dasharray",  `${dash} ${gap}`);
+  fill.setAttribute("stroke-dashoffset", "0");
+
+  // Needle position (angle on semicircle 0-180 deg = score 0-100)
+  const angle  = (score/100)*Math.PI;          // 0..π
+  const cx=90, cy=90, r=70;
+  const nx = cx + r * Math.cos(Math.PI - angle);
+  const ny = cy - r * Math.sin(Math.PI - angle);
+  const needle=document.getElementById("gaugeNeedle");
+  needle.setAttribute("cx", nx.toFixed(1));
+  needle.setAttribute("cy", ny.toFixed(1));
+  needle.style.fill=color;
+
+  document.getElementById("gaugeVal").textContent=Math.round(score);
+  document.getElementById("gaugeVal").style.color=color;
+
+  const badge=document.getElementById("stateBadge");
+  badge.textContent=state;
+  badge.style.color       =color;
+  badge.style.borderColor =color;
+  badge.style.background  =color+"15";
+}
+
+// ── Velocity/Momentum ──
+function renderVelocity(){
+  const velEl  = document.getElementById("velVal");
+  const momEl  = document.getElementById("momVal");
+  const trndEl = document.getElementById("trendVal");
+
+  const sign = v => v>0?"↑":v<0?"↓":"→";
+  const col  = v => v>0?"var(--green)":v<0?"var(--red)":"var(--text-dim)";
+
+  velEl.textContent  = (velocity>=0?"+":"")+velocity;
+  velEl.style.color  = col(velocity);
+  momEl.textContent  = (momentum5>=0?"+":"")+momentum5;
+  momEl.style.color  = col(momentum5);
+
+  const trend = momentum5 > 1 ? "↑ Rising" : momentum5 < -1 ? "↓ Falling" : "→ Flat";
+  trndEl.textContent = trend;
+  trndEl.style.color = col(momentum5);
+}
+
+// ── Next state probs ──
+function renderProbBars(){
+  const stateOrder = ["Stable","Low Risk","Stress","Crisis","Recovery"];
+  const normProbs  = {
+    Stable:   nextProbs.Stable   || 0,
+    LowRisk:  nextProbs.LowRisk  || 0,
+    Stress:   nextProbs.Stress   || 0,
+    Crisis:   nextProbs.Crisis   || 0,
+    Recovery: nextProbs.Recovery || 0,
+  };
+
+  const container=document.getElementById("probBars");
+  container.innerHTML="";
+  stateOrder.forEach(st=>{
+    const key=st.replace(" ","");
+    const pct=(normProbs[key]||0)*100;
+    const color=STATE_COLORS[st]||"#888";
+    const row=document.createElement("div");
+    row.className="prob-row";
+    row.innerHTML=`
+      <div class="prob-label">${st}</div>
+      <div class="prob-track"><div class="prob-fill" style="width:${pct}%;background:${color};"></div></div>
+      <div class="prob-pct">${Math.round(pct)}%</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// ── Stock Grid ──
+function renderStockGrid(){
+  const grid=document.getElementById("stockGrid");
+  grid.innerHTML="";
+  STOCKS.forEach((s,i)=>{
+    const color=s.rec==="BUY"?"var(--green)":s.rec==="HOLD"?"var(--yellow)":"var(--red)";
+    const btn=document.createElement("div");
+    btn.className="stock-btn";
+    btn.id=`sbtn-${s.ticker}`;
+    btn.innerHTML=`
+      <div class="stock-name">${s.ticker}</div>
+      <div class="stock-score-pill" style="background:${color}20;color:${color};border:1px solid ${color}55">${s.score}</div>
+      <div class="stock-rec" style="color:${color}">${s.rec}</div>
+    `;
+    btn.onclick=()=>selectStock(s, btn);
+    grid.appendChild(btn);
+  });
+}
+
+// ── KPIs ──
+function renderKPIs(){
+  const vix=macroData.vix;
+  const fx=macroData.usdInr;
+  document.getElementById("kpiVix").textContent=vix.toFixed(1);
+  document.getElementById("kpiVix").style.color=vix>22?"var(--red)":vix>16?"var(--yellow)":"var(--green)";
+  const vd=macroData.vixDelta;
+  const vdEl=document.getElementById("kpiVixD");
+  vdEl.textContent=(vd>=0?"+":"")+vd+" today";
+  vdEl.className="kpi-delta "+(vd>0?"down":"up");
+
+  document.getElementById("kpiFx").textContent="₹"+fx.toFixed(2);
+  const fd=macroData.usdDelta;
+  const fdEl=document.getElementById("kpiFxD");
+  fdEl.textContent=(fd>=0?"+":"")+fd+" today";
+  fdEl.className="kpi-delta "+(fd>0?"down":"up");
+
+  const cpEl=document.getElementById("kpiCrisis");
+  cpEl.textContent=crisisProb+"%";
+  cpEl.style.color=crisisProb>60?"var(--red)":crisisProb>35?"var(--yellow)":"var(--green)";
+  document.getElementById("kpiCrisisD").textContent="LSTM Model · 3-day horizon";
+  document.getElementById("kpiCrisisD").className="kpi-delta flat";
+
+  document.getElementById("kpiRecovery").textContent=recoverChance+"%";
+  document.getElementById("kpiRecovery").style.color=
+    recoverChance>60?"var(--green)":recoverChance>35?"var(--yellow)":"var(--red)";
+  document.getElementById("kpiRecoveryD").textContent="from "+latestState+" state";
+}
+
+// ── Stock Selection ──
+let selectedStock=null;
+
+function selectStock(stock, btnEl){
+  // Deselect all
+  document.querySelectorAll(".stock-btn").forEach(b=>b.classList.remove("active"));
+  btnEl.classList.add("active");
+  selectedStock=stock;
+
+  const panel=document.getElementById("stockDetailPanel");
+  const msg   =document.getElementById("noStockMsg");
+  panel.classList.add("visible");
+  msg.style.display="none";
+
+  const rec=stock.rec;
+  const recBox=document.getElementById("recBox");
+  const recColor=rec==="BUY"?"var(--green)":rec==="HOLD"?"var(--yellow)":"var(--red)";
+  const recBg  =rec==="BUY"?"rgba(0,230,118,0.08)":rec==="HOLD"?"rgba(255,193,7,0.08)":"rgba(244,67,54,0.08)";
+  recBox.textContent=(rec==="BUY"?"✅ BUY":rec==="HOLD"?"⚠️ HOLD":"❌ AVOID")+" — "+stock.name;
+  recBox.style.color       =recColor;
+  recBox.style.borderColor =recColor;
+  recBox.style.background  =recBg;
+
+  // Confidence tag
+  const confEl=document.createElement("div");
+  confEl.style.cssText="font-size:12px;text-align:center;margin-top:6px;color:var(--text-dim)";
+  confEl.textContent="Confidence: "+stock.conf+" · Score: "+stock.score+"/100";
+  recBox.appendChild(confEl);
+
+  // Metrics
+  const grid=document.getElementById("metricsGrid");
+  grid.innerHTML="";
+  const metrics=[
+    {l:"Stock Score",    v:stock.score+"/100", c: stock.score>70?"var(--green)":stock.score>45?"var(--yellow)":"var(--red)"},
+    {l:"Ann. Volatility",v:stock.vol+"%",      c: stock.vol>25?"var(--red)":stock.vol>18?"var(--yellow)":"var(--green)"},
+    {l:"Beta (β)",       v:stock.beta,          c: stock.beta>1.2?"var(--red)":stock.beta>1.0?"var(--yellow)":"var(--green)"},
+    {l:"Sharpe Ratio",   v:stock.sharpe,        c: stock.sharpe>1?"var(--green)":stock.sharpe>0.5?"var(--yellow)":"var(--red)"},
+    {l:"Momentum (20d)", v:(stock.mom>=0?"+":"")+stock.mom+"%", c: stock.mom>0?"var(--green)":"var(--red)"},
+    {l:"Max Drawdown",   v:stock.dd+"%",        c: stock.dd>-5?"var(--green)":stock.dd>-10?"var(--yellow)":"var(--red)"},
+  ];
+  metrics.forEach(m=>{
+    const el=document.createElement("div");
+    el.className="metric-item";
+    el.innerHTML=`<div class="metric-label">${m.l}</div>
+                  <div class="metric-value" style="color:${m.c}">${m.v}</div>`;
+    grid.appendChild(el);
+  });
+
+  // Reasons
+  const list=document.getElementById("reasonsList");
+  list.innerHTML="";
+  stock.reasons.forEach(r=>{
+    const li=document.createElement("li");
+    li.textContent=r;
+    list.appendChild(li);
+  });
+}
+
+// ── Risk Chart ──
+let riskChartInst=null;
+
+function renderRiskChart(){
+  const ctx=document.getElementById("riskChart").getContext("2d");
+  if(riskChartInst) riskChartInst.destroy();
+
+  // State-based background colors
+  const stateColors = timeline.states.map(s=>{
+    if(s==="Crisis")   return "rgba(244,67,54,0.15)";
+    if(s==="Stress")   return "rgba(255,193,7,0.1)";
+    if(s==="Recovery") return "rgba(41,182,246,0.1)";
+    return "rgba(0,230,118,0.06)";
+  });
+
+  riskChartInst=new Chart(ctx,{
+    type:"line",
+    data:{
+      labels: timeline.dates,
+      datasets:[
+        {
+          label:"Risk Score",
+          data: timeline.scores,
+          borderColor:"#00d4ff",
+          backgroundColor:"rgba(0,212,255,0.06)",
+          borderWidth:2,
+          pointRadius:0,
+          tension:0.4,
+          fill:true,
+        },
+        {
+          label:"Crisis Threshold (40)",
+          data: Array(timeline.scores.length).fill(40),
+          borderColor:"rgba(244,67,54,0.5)",
+          borderWidth:1,borderDash:[4,4],
+          pointRadius:0, fill:false,
+        },
+        {
+          label:"Stress Threshold (65)",
+          data: Array(timeline.scores.length).fill(65),
+          borderColor:"rgba(255,193,7,0.4)",
+          borderWidth:1,borderDash:[4,4],
+          pointRadius:0, fill:false,
+        },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      interaction:{mode:"index",intersect:false},
+      plugins:{
+        legend:{
+          labels:{color:"#6b88a8",font:{size:10,family:"Space Mono"}},
+          position:"top",
+        },
+        tooltip:{
+          backgroundColor:"#131d2e",
+          borderColor:"#1e2d42",
+          borderWidth:1,
+          titleColor:"#d4e4f7",
+          bodyColor:"#6b88a8",
+          titleFont:{family:"Space Mono"},
+          callbacks:{
+            afterLabel:(ctx)=>"State: "+timeline.states[ctx.dataIndex],
+          }
+        }
+      },
+      scales:{
+        x:{
+          ticks:{color:"#3d5a7a",font:{size:9,family:"Space Mono"},maxTicksLimit:10},
+          grid:{color:"rgba(30,45,66,0.6)"},
+        },
+        y:{
+          min:0,max:100,
+          ticks:{color:"#3d5a7a",font:{size:9,family:"Space Mono"}},
+          grid:{color:"rgba(30,45,66,0.6)"},
+        }
+      }
+    }
+  });
+}
+
+// ── Radar Chart ──
+let radarInst=null;
+
+function renderRadarChart(){
+  const ctx=document.getElementById("radarChart").getContext("2d");
+  if(radarInst) radarInst.destroy();
+
+  radarInst=new Chart(ctx,{
+    type:"radar",
+    data:{
+      labels:["Stability","Volume","Network","External"],
+      datasets:[{
+        label:"Component Scores",
+        data:[
+          components.stability.toFixed(1),
+          components.volume.toFixed(1),
+          components.network.toFixed(1),
+          components.external.toFixed(1),
+        ],
+        backgroundColor:"rgba(0,212,255,0.12)",
+        borderColor:"#00d4ff",
+        pointBackgroundColor:"#00d4ff",
+        pointRadius:4,
+        borderWidth:2,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:"#6b88a8",font:{size:10}}}},
+      scales:{
+        r:{
+          min:0, max:100,
+          ticks:{stepSize:25,color:"#3d5a7a",backdropColor:"transparent",font:{size:9,family:"Space Mono"}},
+          grid:{color:"rgba(30,45,66,0.8)"},
+          angleLines:{color:"rgba(30,45,66,0.8)"},
+          pointLabels:{color:"#6b88a8",font:{size:10,family:"Space Mono"}},
+        }
+      }
+    }
+  });
+}
+
+// ── Outlook Chart ──
+let outlookInst=null;
+
+function renderOutlookChart(){
+  const ctx=document.getElementById("outlookChart").getContext("2d");
+  if(outlookInst) outlookInst.destroy();
+
+  // 3-day transition probabilities
+  const states=Object.keys(TRANSITION[latestState]||{});
+  const probs =Object.values(TRANSITION[latestState]||{}).map(v=>Math.round(v*100));
+  const colors=states.map(s=>STATE_COLORS[s]||"#888");
+
+  outlookInst=new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels: states,
+      datasets:[{
+        label:"Probability (%)",
+        data: probs,
+        backgroundColor: colors.map(c=>c+"88"),
+        borderColor:     colors,
+        borderWidth:2,
+        borderRadius:5,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:"#131d2e",borderColor:"#1e2d42",borderWidth:1,
+          titleColor:"#d4e4f7",bodyColor:"#6b88a8"},
+      },
+      scales:{
+        x:{ticks:{color:"#6b88a8",font:{size:9,family:"Space Mono"}},grid:{color:"rgba(30,45,66,0.4)"}},
+        y:{min:0,max:100,ticks:{color:"#3d5a7a",font:{size:9,family:"Space Mono"}},grid:{color:"rgba(30,45,66,0.4)"}},
+      }
+    }
+  });
+
+  // Text summary
+  const outlook=document.getElementById("outlookText");
+  const dominant=states.reduce((a,b,i)=>probs[i]>probs[states.indexOf(a)]?b:a);
+  const color=STATE_COLORS[dominant]||"#888";
+  outlook.innerHTML=`
+    <div style="font-size:11px;color:var(--text-dim);line-height:1.7">
+      <span style="color:${color};font-weight:700">${dominant}</span> state most probable next (${Math.max(...probs)}%).<br>
+      Crisis probability: <span style="color:${crisisProb>50?"var(--red)":"var(--green)"}; font-weight:700">${crisisProb}%</span> (3-day horizon).<br>
+      Recovery chance: <span style="color:var(--recovery);font-weight:700">${recoverChance}%</span>
+    </div>
+  `;
+}
+
+// ── Ranking Table ──
+function renderRankingTable(){
+  const tbody=document.getElementById("rankingBody");
+  tbody.innerHTML="";
+  STOCKS.forEach((s,i)=>{
+    const recClass=`rec-${s.rec}`;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td style="color:var(--text);font-family:var(--font-main);font-weight:700">${s.name}<br><span style="font-size:10px;color:var(--text-dim)">${s.ticker}</span></td>
+      <td style="color:${s.score>70?"var(--green)":s.score>45?"var(--yellow)":"var(--red)"}">${s.score}</td>
+      <td><span class="rec-tag ${recClass}">${s.rec}</span></td>
+      <td style="color:${s.vol>25?"var(--red)":s.vol>18?"var(--yellow)":"var(--green)"}">${s.vol}%</td>
+      <td style="color:${s.beta>1.2?"var(--red)":s.beta>1.0?"var(--yellow)":"var(--green)"}">${s.beta}</td>
+      <td style="color:${s.sharpe>1?"var(--green)":s.sharpe>0.5?"var(--yellow)":"var(--red)"}">${s.sharpe}</td>
+      <td style="color:${s.mom>0?"var(--green)":"var(--red)"}">${s.mom>=0?"+":""}${s.mom}%</td>
+      <td style="color:s.conf==='HIGH'?'var(--green)':'var(--text-dim)'">${s.conf}</td>
+    `;
+    tr.onclick=()=>{
+      const btn=document.getElementById(`sbtn-${s.ticker}`);
+      if(btn) selectStock(s,btn);
+      switchTab("dashboard");
+    };
+    tr.style.cursor="pointer";
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Model Comparison Table ──
+function renderModelTable(){
+  const tbody=document.getElementById("modelBody");
+  tbody.innerHTML="";
+  MODEL_RESULTS.forEach((m,i)=>{
+    const isBest=(i===0);
+    const tr=document.createElement("tr");
+    if(isBest) tr.classList.add("best-row");
+
+    const c=(v,good,warn)=>v>=good?"var(--green)":v>=warn?"var(--yellow)":"var(--red)";
+    const ci=(v,good,warn)=>v<=good?"var(--green)":v<=warn?"var(--yellow)":"var(--red)"; // inverted
+
+    tr.innerHTML=`
+      <td>${isBest?"🏆 ":""}${m.name}</td>
+      <td style="color:${c(m.prec,0.75,0.6)}">${m.prec.toFixed(3)}</td>
+      <td style="color:${c(m.recall,0.78,0.65)}">${m.recall.toFixed(3)}</td>
+      <td style="color:${c(m.f1,0.78,0.65)}">${m.f1.toFixed(3)}</td>
+      <td style="color:${c(m.auc,0.85,0.72)}">${m.auc.toFixed(3)}</td>
+      <td style="color:${c(m.evDetect,0.8,0.65)}">${m.evDetect.toFixed(3)}</td>
+      <td style="color:${ci(m.delay,1,3)}">${m.delay>0?"+":""}${m.delay.toFixed(1)}d</td>
+      <td style="color:${ci(m.falseAlarm,0.15,0.25)}">${m.falseAlarm.toFixed(3)}</td>
+      <td style="color:${c(m.stability,0.87,0.82)}">${m.stability.toFixed(3)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── PR Curve Chart ──
+let prInst=null;
+
+function renderPRChart(){
+  const ctx=document.getElementById("prChart").getContext("2d");
+  if(prInst) prInst.destroy();
+
+  function genPRCurve(f1_base, n=30){
+    const pts=[];
+    for(let i=0;i<=n;i++){
+      const r=i/n;
+      const p=Math.min(1,f1_base + (1-r)*0.15 + (Math.random()-0.5)*0.02);
+      pts.push({x:parseFloat(r.toFixed(2)),y:parseFloat(p.toFixed(3))});
+    }
+    return pts;
+  }
+
+  const modelCurves=MODEL_RESULTS.map(m=>({
+    label:m.name,
+    data: genPRCurve(m.f1),
+    borderColor: m.name.includes("Random Forest+HMM")?"#e63946":
+                 m.name==="LSTM"?"#457b9d":
+                 m.name==="HMM"?"#2a9d8f":
+                 m.name.includes("Logistic")?"#e9c46a":
+                 m.name.includes("Isolation")?"#f4a261":"#a8dadc",
+    borderWidth: m.name.includes("Yours")?3:1.5,
+    pointRadius:0, fill:false, tension:0.4,
+  }));
+
+  prInst=new Chart(ctx,{
+    type:"scatter",
+    data:{datasets:modelCurves},
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      showLine:true,
+      plugins:{
+        legend:{labels:{color:"#6b88a8",font:{size:9,family:"Space Mono"},usePointStyle:true}},
+        tooltip:{backgroundColor:"#131d2e",borderColor:"#1e2d42",borderWidth:1,
+          titleColor:"#d4e4f7",bodyColor:"#6b88a8"},
+      },
+      scales:{
+        x:{min:0,max:1,title:{display:true,text:"Recall",color:"#6b88a8",font:{size:10}},
+           ticks:{color:"#3d5a7a"},grid:{color:"rgba(30,45,66,0.4)"}},
+        y:{min:0,max:1,title:{display:true,text:"Precision",color:"#6b88a8",font:{size:10}},
+           ticks:{color:"#3d5a7a"},grid:{color:"rgba(30,45,66,0.4)"}},
+      }
+    }
+  });
+}
+
+// ── Feature Bars ──
+function renderFeatBars(){
+  const container=document.getElementById("featBars");
+  container.innerHTML="";
+  const maxImp=FEATURES[0].imp;
+  FEATURES.forEach(f=>{
+    const pct=(f.imp/maxImp*100).toFixed(1);
+    const row=document.createElement("div");
+    row.className="feat-row";
+    row.innerHTML=`
+      <div class="feat-name">${f.name}</div>
+      <div class="feat-track"><div class="feat-fill" style="width:${pct}%"></div></div>
+      <div class="feat-pct">${(f.imp*100).toFixed(1)}%</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// ── Tab Switching ──
+function switchTab(id){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  event.target.classList.add("active");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+
+function init(){
+  renderGauge(latestScore, latestState);
+  renderVelocity();
+  renderProbBars();
+  renderStockGrid();
+  renderKPIs();
+  renderRiskChart();
+  renderRadarChart();
+  renderOutlookChart();
+  renderRankingTable();
+  renderModelTable();
+  renderPRChart();
+  renderFeatBars();
+}
+
+// Small delay so fonts load
+setTimeout(loadData, 100);
+
+// Live simulation: score drifts slightly every 8 sec
+setInterval(()=>{
+  const el=document.getElementById("gaugeVal");
+  if(!el) return;
+  const current=parseFloat(el.textContent)||latestScore;
+  const drift=(Math.random()-0.48)*0.8;
+  const next=Math.max(5,Math.min(96,current+drift));
+  const newState=next>=80?"Stable":next>=65?"Low Risk":next>=40?"Stress":"Crisis";
+  renderGauge(next,newState);
+}, 8000);
+</script>
+</body>
+</html>

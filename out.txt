@@ -1,0 +1,4 @@
+States 2 F1 0.5085
+States 3 F1 0.5000
+States 4 F1 0.5000
+States 5 F1 0.4746

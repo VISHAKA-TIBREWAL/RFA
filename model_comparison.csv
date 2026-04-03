@@ -1,0 +1,6 @@
+model,precision,recall,f1,roc_auc,event_detection_rate,avg_delay_days,false_alarm_rate,stability_score
+HMM,0.8333,0.9375,0.8824,0.9677,1.0,1.0,0.1111,0.9987
+LSTM,0.9375,0.9375,0.9375,0.9997,1.0,0.0,0.0,0.9993
+Logistic,0.381,1.0,0.5517,0.9997,1.0,0.0,0.5952,0.998
+Isolation Forest,0.0349,1.0,0.0674,0.9997,1.0,0.0,0.963,0.9407
+Static Threshold,0.8667,0.8125,0.8387,0.9061,1.0,0.0,0.0667,0.998

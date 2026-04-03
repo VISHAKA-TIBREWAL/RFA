@@ -1,0 +1,12 @@
+stock,stock_score,recommendation,confidence,ann_return,ann_volatility,sharpe,beta,max_drawdown_pct,momentum,corr_with_index,reasons
+AXISBANK,82.7,BUY,HIGH,69.82,16.61,4.2,0.89,-2.62,5.54,0.421,"['Low volatility, solid momentum, healthy beta']"
+SBIN,82.5,BUY,HIGH,95.41,14.27,6.68,1.36,-2.07,7.57,0.746,['High market sensitivity (β = 1.36)']
+BANKBARODA,71.8,BUY,MODERATE,53.97,20.48,2.63,1.79,-3.03,4.28,0.684,['High market sensitivity (β = 1.79)']
+IDFCFIRSTB,68.4,HOLD,MODERATE,-11.92,19.79,-0.6,0.76,-5.44,-0.95,0.302,['Negative momentum — falling trend']
+FEDERALBNK,67.9,HOLD,MODERATE,77.1,40.42,1.91,0.47,-8.07,6.12,0.091,['High volatility (40.4% annualised)']
+PNB,67.2,HOLD,MODERATE,43.63,24.93,1.75,1.86,-6.53,3.46,0.585,['High market sensitivity (β = 1.86)']
+KOTAKBANK,66.7,HOLD,MODERATE,-19.2,16.11,-1.19,0.49,-5.89,-1.52,0.239,['Negative momentum — falling trend']
+ICICIBANK,65.9,HOLD,MODERATE,-16.28,20.7,-0.79,1.24,-6.58,-1.29,0.47,"['High market sensitivity (β = 1.24)', 'Negative momentum — falling trend']"
+INDUSINDBK,64.4,HOLD,MODERATE,75.59,30.72,2.46,2.17,-5.54,6.0,0.555,"['High volatility (30.7% annualised)', 'High market sensitivity (β = 2.17)']"
+NIFTY_BANK,64.4,HOLD,MODERATE,-12.96,7.85,-1.65,1.0,-3.13,-1.03,1.0,"['Strongly correlated with market stress', 'Negative momentum — falling trend']"
+HDFCBANK,54.4,HOLD,MODERATE,-102.55,13.03,-7.87,0.55,-8.64,-8.14,0.333,['Negative momentum — falling trend']
